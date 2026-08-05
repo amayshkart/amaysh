@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت - سامانه کارت آمایش</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #16323F;
+    --navy-deep: #0E2530;
+    --sand: #EFE6D3;
+    --paper: #FAF6EC;
+    --gold: #B8863B;
+    --gold-bright: #D6A85C;
+    --ink: #1B1B18;
+    --line: rgba(22,50,63,0.12);
+    --radius: 10px;
+    --shadow: 0 8px 30px rgba(14,37,48,0.08);
+    --danger: #b91c1c;
+    --success: #166534;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Vazirmatn', sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    padding:20px;
+    min-height:100vh;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; direction:ltr; }
+  .container{ max-width:1100px; margin:0 auto; }
+
+  /* ===== لاگین ===== */
+  .login-box{
+    max-width:400px; margin:80px auto;
+    background:#fff; padding:32px;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+  }
+  .login-box h2{
+    text-align:center; color:var(--navy-deep);
+    border-bottom:3px solid var(--gold); padding-bottom:12px; margin-bottom:24px;
+  }
+  .login-box label{ display:block; font-weight:600; font-size:13px; margin:12px 0 6px; color:var(--navy-deep); }
+  .login-box input{
+    width:100%; padding:12px 14px; border:2px solid #d1d5db; border-radius:var(--radius);
+    font-size:15px; outline:none; transition:.2s;
+  }
+  .login-box input:focus{ border-color:var(--navy); box-shadow:0 0 0 3px rgba(22,50,63,0.08); }
+  .login-box .btn{
+    width:100%; padding:14px; background:var(--navy-deep); color:#fff;
+    border:none; border-radius:var(--radius); font-weight:700; font-size:16px;
+    cursor:pointer; margin-top:18px; transition:.2s;
+  }
+  .login-box .btn:hover{ background:var(--navy); }
+  .login-error{ color:var(--danger); text-align:center; margin-top:12px; font-weight:600; display:none; }
+
+  /* ===== پنل ===== */
+  .panel{ display:none; }
+  .header{
+    background:var(--navy-deep); color:#fff; padding:16px 24px;
+    border-radius:var(--radius); display:flex; justify-content:space-between;
+    align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px;
+    border-bottom:3px solid var(--gold);
+  }
+  .header h1{ font-size:20px; font-weight:700; }
+  .header .logout{
+    background:transparent; border:2px solid #fff; color:#fff;
+    padding:8px 20px; border-radius:var(--radius); cursor:pointer;
+    font-weight:700; font-size:14px; transition:.2s;
+  }
+  .header .logout:hover{ background:#fff; color:var(--navy-deep); }
+
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
+    gap:16px; margin-bottom:24px;
+  }
+  .stat-box{
+    background:#fff; padding:18px; border-radius:var(--radius);
+    border:1px solid var(--line); text-align:center;
+  }
+  .stat-box .number{ font-size:28px; font-weight:900; color:var(--navy-deep); }
+  .stat-box .label{ font-size:13px; color:#6b7280; margin-top:4px; }
+
+  .card{
+    background:#fff; padding:24px; border-radius:var(--radius);
+    border:1px solid var(--line); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .card h3{
+    color:var(--navy-deep); margin-bottom:16px; font-size:17px;
+    border-bottom:3px solid var(--gold); padding-bottom:8px;
+  }
+
+  .form-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  .form-grid .full{ grid-column:1/-1; }
+  .form-grid label{ font-weight:600; font-size:13px; display:block; margin-bottom:4px; color:var(--navy-deep); }
+  .form-grid input, .form-grid textarea{
+    width:100%; padding:10px 12px; border:2px solid #d1d5db;
+    border-radius:var(--radius); font-size:14px; outline:none; transition:.2s; font-family:inherit;
+  }
+  .form-grid input:focus, .form-grid textarea:focus{
+    border-color:var(--navy); box-shadow:0 0 0 3px rgba(22,50,63,0.08);
+  }
+  .form-grid textarea{ resize:vertical; min-height:50px; }
+
+  /* ===== لینک عکس ===== */
+  .photo-section{
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+    padding:12px 16px; background:#f8f9fc; border-radius:8px; border:1px solid var(--line);
+  }
+  .photo-section .preview{
+    width:100px; height:100px; border:3px solid var(--gold); object-fit:cover;
+    background:#f0f2f5; display:flex; align-items:center; justify-content:center;
+    font-size:40px; color:#9ca3af; flex-shrink:0;
+  }
+  .photo-section .link-input{ flex:1; min-width:200px; }
+  .photo-section .link-input input{
+    width:100%; padding:10px 14px; border:2px solid #d1d5db;
+    border-radius:6px; font-size:14px; outline:none; direction:ltr;
+  }
+  .photo-section .link-input input:focus{ border-color:var(--navy); }
+  .photo-section .link-input small{ color:#6b7280; font-size:12px; display:block; margin-top:4px; }
+  .photo-section .btn-preview{
+    padding:8px 18px; background:var(--navy-deep); color:#fff;
+    border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;
+  }
+  .photo-section .btn-preview:hover{ background:var(--navy); }
+  .photo-section .btn-remove{
+    padding:8px 14px; background:var(--danger); color:#fff;
+    border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;
+  }
+  .photo-section .btn-remove:hover{ background:#7a1515; }
+
+  .btn-submit{
+    padding:12px 28px; background:var(--navy-deep); color:#fff;
+    border:none; border-radius:var(--radius); font-weight:700; font-size:15px;
+    cursor:pointer; margin-top:10px; transition:.2s;
+  }
+  .btn-submit:hover{ background:var(--navy); }
+  .btn-danger{ background:var(--danger); color:#fff; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-weight:600; }
+  .btn-danger:hover{ background:#7a1515; }
+  .btn-edit{ background:var(--gold); color:var(--navy-deep); border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-weight:600; }
+  .btn-edit:hover{ background:#a87a2a; color:#fff; }
+
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:14px; }
+  th, td{ padding:10px 12px; text-align:center; border:1px solid var(--line); }
+  th{ background:var(--navy-deep); color:#fff; font-weight:700; }
+  tr:nth-child(even){ background:#f8f9fc; }
+  .record-photo{ width:40px; height:40px; object-fit:cover; border:2px solid var(--gold); background:#f0f2f5; }
+  .record-photo-placeholder{ width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; font-size:20px; color:#9ca3af; }
+
+  .toast{
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    padding:14px 28px; border-radius:var(--radius); color:#fff; font-weight:700;
+    z-index:999; display:none; animation:slideDown .4s ease;
+    box-shadow:0 8px 30px rgba(0,0,0,0.2);
+  }
+  .toast.success{ background:var(--success); }
+  .toast.error{ background:var(--danger); }
+  @keyframes slideDown{
+    from{ opacity:0; transform:translateX(-50%) translateY(-20px); }
+    to{ opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+
+  .generated-code{
+    background:#f0f7f0; border:2px solid var(--success); padding:12px;
+    border-radius:var(--radius); text-align:center; margin-top:12px;
+    font-size:20px; font-weight:900; color:var(--navy-deep); letter-spacing:2px; display:none;
+  }
+
+  /* ===== مودال ویرایش ===== */
+  .modal-overlay{
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.5); z-index:1000; display:none;
+    align-items:center; justify-content:center; backdrop-filter:blur(4px);
+  }
+  .modal-box{
+    background:#fff; max-width:700px; width:95%; padding:28px 30px;
+    border-radius:var(--radius); box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    animation:modalIn .3s ease; max-height:90vh; overflow-y:auto;
+  }
+  @keyframes modalIn{
+    from{ opacity:0; transform:scale(0.95) translateY(20px); }
+    to{ opacity:1; transform:scale(1) translateY(0); }
+  }
+  .modal-box h2{ color:var(--navy-deep); border-bottom:3px solid var(--gold); padding-bottom:12px; margin-bottom:20px; text-align:center; }
+  .modal-actions{ display:flex; gap:12px; margin-top:16px; justify-content:flex-end; flex-wrap:wrap; }
+  .modal-actions .btn-save{ padding:10px 28px; background:var(--success); color:#fff; border:none; border-radius:var(--radius); font-weight:700; font-size:14px; cursor:pointer; }
+  .modal-actions .btn-save:hover{ background:#0f4a2a; }
+  .modal-actions .btn-cancel{ padding:10px 28px; background:#d1d5db; color:#1a1a2e; border:none; border-radius:var(--radius); font-weight:700; font-size:14px; cursor:pointer; }
+  .modal-actions .btn-cancel:hover{ background:#b0b5bb; }
+
+  @media(max-width:640px){
+    .form-grid{ grid-template-columns:1fr; }
+    .header{ flex-direction:column; text-align:center; }
+    .stats{ grid-template-columns:1fr 1fr; }
+    .login-box{ margin:40px 12px; padding:24px; }
+    .photo-section{ flex-direction:column; align-items:center; }
+    .photo-section .link-input{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== توست ===== -->
+<div id="toast" class="toast"></div>
+
+<!-- ===== مودال ویرایش ===== -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <h2>ویرایش اطلاعات</h2>
+    <div class="form-grid" id="editForm">
+      <div><label>نام و نام خانوادگی</label><input id="eName" /></div>
+      <div><label>نام پدر</label><input id="eFather" /></div>
+      <div><label>شناسه یکتا</label><input id="eId" readonly style="background:#f0f2f5;" /></div>
+      <div><label>تاریخ صدور</label><input id="eIssue" /></div>
+      <div><label>تاریخ انقضا</label><input id="eExpiry" /></div>
+      <div class="full"><label>محل اقامت</label><input id="eResidence" /></div>
+      <div class="full"><label>لینک عکس</label><input id="ePhoto" dir="ltr" placeholder="https://..." /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveEdit()">ذخیره تغییرات</button>
+      <button class="btn-cancel" onclick="closeEdit()">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== لاگین ===== -->
+<div id="loginBox" class="login-box">
+  <h2>پنل مدیریت</h2>
+  <label>نام کاربری</label>
+  <input id="loginUser" type="text" placeholder="نام کاربری" />
+  <label>رمز عبور</label>
+  <input id="loginPass" type="password" placeholder="رمز عبور" />
+  <button class="btn" id="loginBtn">ورود</button>
+  <div id="loginError" class="login-error">نام کاربری یا رمز عبور اشتباه است</div>
+</div>
+
+<!-- ===== پنل ===== -->
+<div id="panel" class="panel">
+
+  <div class="header">
+    <h1>پنل مدیریت کارت آمایش</h1>
+    <div>
+      <span id="adminUser" style="margin-left:16px;opacity:0.8;">admin</span>
+      <button class="logout" id="logoutBtn">خروج</button>
+    </div>
+  </div>
+
+  <!-- آمار -->
+  <div class="stats">
+    <div class="stat-box"><div class="number" id="totalCount">0</div><div class="label">تعداد کل</div></div>
+  </div>
+
+  <!-- ===== فرم افزودن ===== -->
+  <div class="card">
+    <h3>افزودن کارت آمایش جدید</h3>
+    <div class="form-grid">
+      <div><label>نام و نام خانوادگی *</label><input id="fName" placeholder="علی محمدی" /></div>
+      <div><label>نام پدر *</label><input id="fFather" placeholder="رضا محمدی" /></div>
+      <div><label>تاریخ صدور *</label><input id="fIssue" placeholder="۱۴۰۲/۰۵/۱۰" /></div>
+      <div><label>تاریخ انقضا *</label><input id="fExpiry" placeholder="۱۴۰۴/۰۵/۱۰" /></div>
+      <div class="full"><label>محل اقامت *</label><input id="fResidence" placeholder="تهران، خیابان آزادی" /></div>
+
+      <!-- ===== لینک عکس ===== -->
+      <div class="full">
+        <label>لینک عکس (اختیاری)</label>
+        <div class="photo-section">
+          <img id="fPreview" class="preview" src="" alt="پیش‌نمایش" style="display:none;" />
+          <div id="fNoPreview" class="preview" style="display:flex;">👤</div>
+          <div class="link-input">
+            <input id="fPhotoLink" placeholder="https://example.com/photo.jpg" dir="ltr" />
+            <small>لینک عکس آپلود شده در گیت‌هاب یا سرویس ابری</small>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+              <button type="button" class="btn-preview" onclick="previewPhoto()">پیش‌نمایش</button>
+              <button type="button" class="btn-remove" onclick="removePhoto()">حذف عکس</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-submit" id="addBtn">افزودن کارت</button>
+    <div id="generatedCode" class="generated-code"></div>
+  </div>
+
+  <!-- ===== لیست ===== -->
+  <div class="card">
+    <h3>لیست کارت‌های آمایش</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>عکس</th><th>شناسه</th><th>نام</th><th>نام پدر</th><th>تاریخ انقضا</th><th>عملیات</th></tr></thead>
+        <tbody id="recordsTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  دیتابیس (هم‌ساختار با سامانه اصلی)
+// ============================================================
+let records = {
+  "224123456789": {
+    name: "علی محمدی",
+    father: "رضا محمدی",
+    id: "224123456789",
+    issueDate: "۱۴۰۲/۰۵/۱۰",
+    expiryDate: "۱۴۰۴/۰۵/۱۰",
+    residence: "تهران، خیابان آزادی",
+    photo: ""
+  },
+  "224765432187": {
+    name: "زهرا کریمی",
+    father: "حسین کریمی",
+    id: "224765432187",
+    issueDate: "۱۴۰۱/۰۸/۲۲",
+    expiryDate: "۱۴۰۳/۰۸/۲۲",
+    residence: "اصفهان، خیابان امام",
+    photo: ""
+  },
+  "224987654321": {
+    name: "سعید رضایی",
+    father: "محمد رضایی",
+    id: "224987654321",
+    issueDate: "۱۴۰۳/۰۱/۱۵",
+    expiryDate: "۱۴۰۵/۰۱/۱۵",
+    residence: "شیراز، بلوار حافظ",
+    photo: ""
+  }
+};
+
+// ============================================================
+//  متغیرها
+// ============================================================
+let currentPhotoLink = "";
+let editingId = null;
+
+// ============================================================
+//  توابع
+// ============================================================
+function generateId() {
+  let code;
+  let attempts = 0;
+  do {
+    code = String(Math.floor(1000000 + Math.random() * 9000000));
+    attempts++;
+  } while (records[code] && attempts < 100);
+  return code;
+}
+
+function showToast(msg, type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type; t.style.display='block';
+  setTimeout(()=>{ t.style.display='none'; },3000);
+}
+
+function renderTable(){
+  const tbody=document.getElementById('recordsTable');
+  const keys=Object.keys(records);
+  if(!keys.length){
+    tbody.innerHTML='<tr><td colspan="6" style="padding:20px;color:#6b7280;">هیچ کارتی ثبت نشده است</td></tr>';
+    return;
+  }
+  let html='';
+  keys.forEach(id=>{
+    const r=records[id];
+    const photoHtml = r.photo ? `<img src="${r.photo}" class="record-photo" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:18px;\\'>👤</span>';" />` : `<span class="record-photo-placeholder">👤</span>`;
+    html+=`
+      <tr>
+        <td>${photoHtml}</td>
+        <td><strong>${id}</strong></td>
+        <td>${r.name}</td>
+        <td>${r.father}</td>
+        <td>${r.expiryDate}</td>
+        <td>
+          <button class="btn-edit" onclick="openEdit('${id}')">ویرایش</button>
+          <button class="btn-danger" onclick="deleteRecord('${id}')">حذف</button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML=html;
+  document.getElementById('totalCount').textContent=keys.length;
+}
+
+// ============================================================
+//  عکس
+// ============================================================
+function previewPhoto(){
+  const link=document.getElementById('fPhotoLink').value.trim();
+  if(!link){ showToast('لطفاً لینک عکس را وارد کنید','error'); return; }
+  if(!link.startsWith('http://') && !link.startsWith('https://')){ showToast('لینک باید با http:// یا https:// شروع شود','error'); return; }
+  currentPhotoLink=link;
+  document.getElementById('fPreview').src=link;
+  document.getElementById('fPreview').style.display='block';
+  document.getElementById('fNoPreview').style.display='none';
+  showToast('پیش‌نمایش بارگذاری شد','success');
+}
+
+function removePhoto(){
+  currentPhotoLink='';
+  document.getElementById('fPhotoLink').value='';
+  document.getElementById('fPreview').src='';
+  document.getElementById('fPreview').style.display='none';
+  document.getElementById('fNoPreview').style.display='flex';
+}
+
+// ============================================================
+//  حذف
+// ============================================================
+window.deleteRecord=function(id){
+  if(!confirm(`آیا از حذف کارت با شناسه ${id} مطمئن هستید؟`)) return;
+  delete records[id];
+  saveToStorage();
+  renderTable();
+  showToast('کارت با موفقیت حذف شد','success');
+};
+
+// ============================================================
+//  ویرایش
+// ============================================================
+window.openEdit=function(id){
+  editingId=id;
+  const r=records[id];
+  document.getElementById('eName').value=r.name||'';
+  document.getElementById('eFather').value=r.father||'';
+  document.getElementById('eId').value=r.id||'';
+  document.getElementById('eIssue').value=r.issueDate||'';
+  document.getElementById('eExpiry').value=r.expiryDate||'';
+  document.getElementById('eResidence').value=r.residence||'';
+  document.getElementById('ePhoto').value=r.photo||'';
+  document.getElementById('editModal').style.display='flex';
+};
+
+window.closeEdit=function(){
+  document.getElementById('editModal').style.display='none';
+  editingId=null;
+};
+
+window.saveEdit=function(){
+  if(!editingId) return;
+  const name=document.getElementById('eName').value.trim();
+  const father=document.getElementById('eFather').value.trim();
+  const id=document.getElementById('eId').value.trim();
+  const issue=document.getElementById('eIssue').value.trim();
+  const expiry=document.getElementById('eExpiry').value.trim();
+  const residence=document.getElementById('eResidence').value.trim();
+  const photo=document.getElementById('ePhoto').value.trim();
+
+  if(!name||!father||!issue||!expiry||!residence){
+    showToast('لطفاً تمام فیلدها را پر کنید','error');
+    return;
+  }
+
+  records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
+  saveToStorage();
+  renderTable();
+  closeEdit();
+  showToast('اطلاعات با موفقیت ویرایش شد','success');
+};
+
+// کلیک خارج از مودال
+document.getElementById('editModal').addEventListener('click',function(e){
+  if(e.target===this) closeEdit();
+});
+
+// ============================================================
+//  ذخیره و بازیابی
+// ============================================================
+function saveToStorage(){
+  try{ localStorage.setItem('amayeshRecords', JSON.stringify(records)); }catch(e){}
+}
+
+function loadFromStorage(){
+  try{
+    const data=localStorage.getItem('amayeshRecords');
+    if(data){ const parsed=JSON.parse(data); if(Object.keys(parsed).length>0) records=parsed; }
+  }catch(e){}
+}
+
+// ============================================================
+//  لاگین
+// ============================================================
+const loginBox=document.getElementById('loginBox');
+const panel=document.getElementById('panel');
+const loginBtn=document.getElementById('loginBtn');
+const loginError=document.getElementById('loginError');
+const logoutBtn=document.getElementById('logoutBtn');
+
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  if(u==='admin' && p==='admin90'){
+    loginBox.style.display='none';
+    panel.style.display='block';
+    loginError.style.display='none';
+    loadFromStorage();
+    renderTable();
+    showToast('به پنل مدیریت خوش آمدید','success');
+  }else{
+    loginError.style.display='block';
+  }
+}
+
+loginBtn.addEventListener('click',doLogin);
+document.getElementById('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+logoutBtn.addEventListener('click',function(){
+  if(confirm('آیا از خروج مطمئن هستید؟')){
+    panel.style.display='none';
+    loginBox.style.display='block';
+    document.getElementById('loginPass').value='';
+    document.getElementById('loginUser').value='';
+    loginError.style.display='none';
+  }
+});
+
+// ============================================================
+//  افزودن
+// ============================================================
+document.getElementById('addBtn').addEventListener('click',function(){
+  const name=document.getElementById('fName').value.trim();
+  const father=document.getElementById('fFather').value.trim();
+  const issue=document.getElementById('fIssue').value.trim();
+  const expiry=document.getElementById('fExpiry').value.trim();
+  const residence=document.getElementById('fResidence').value.trim();
+  const photo=currentPhotoLink;
+
+  if(!name||!father||!issue||!expiry||!residence){
+    showToast('لطفاً تمام فیلدهای الزامی را پر کنید','error');
+    return;
+  }
+
+  const id=generateId();
+  if(!id){ showToast('خطا در تولید شناسه','error'); return; }
+
+  records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
+
+  const genDiv=document.getElementById('generatedCode');
+  genDiv.textContent='✅ شناسه یکتا: '+id;
+  genDiv.style.display='block';
+
+  document.getElementById('fName').value='';
+  document.getElementById('fFather').value='';
+  document.getElementById('fIssue').value='';
+  document.getElementById('fExpiry').value='';
+  document.getElementById('fResidence').value='';
+  removePhoto();
+
+  saveToStorage();
+  renderTable();
+  showToast(`کارت با شناسه ${id} با موفقیت افزوده شد`,'success');
+  setTimeout(()=>{ genDiv.style.display='none'; },8000);
+});
+
+// ============================================================
+//  بارگذاری
+// ============================================================
+loadFromStorage();
+renderTable();
+</script>
+</body>
+</html>
