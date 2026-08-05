@@ -144,6 +144,10 @@
   .btn-danger:hover{ background:#7a1515; }
   .btn-edit{ background:var(--gold); color:var(--navy-deep); border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-weight:600; }
   .btn-edit:hover{ background:#a87a2a; color:#fff; }
+  .btn-backup{ background:var(--gold); color:var(--navy-deep); border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:8px; }
+  .btn-backup:hover{ background:#a87a2a; color:#fff; }
+  .btn-restore{ background:var(--success); color:#fff; border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:8px; }
+  .btn-restore:hover{ background:#0f4a2a; }
 
   .table-wrap{ overflow-x:auto; }
   table{ width:100%; border-collapse:collapse; font-size:14px; }
@@ -264,9 +268,14 @@
 <div id="panel" class="panel">
 
   <div class="header">
-    <h1>پنل مدیریت کارت آمایش</h1>
     <div>
-      <span id="adminUser" style="margin-left:16px;opacity:0.8;">admin</span>
+      <h1>پنل مدیریت کارت آمایش</h1>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span id="adminUser" style="opacity:0.8;">admin</span>
+      <button class="btn-backup" onclick="backupData()">📤 پشتیبان‌گیری</button>
+      <button class="btn-restore" onclick="document.getElementById('restoreInput').click()">📥 بازیابی</button>
+      <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="restoreData(event)" />
       <button class="logout" id="logoutBtn">خروج</button>
     </div>
   </div>
@@ -316,15 +325,6 @@
 
 <script>
 // ============================================================
-//  تنظیمات JSONBin
-// ============================================================
-const JSONBIN_CONFIG = {
-  binId: "6a7329cff5f4af5e29ee3912",
-  apiKey: "$2a$10$gQdsRL7LXLsoESY./AanBOYShpyTL9E3HSUnhYSWCYYwR6U3d11qq",
-  url: "https://api.jsonbin.io/v3/b/6a7329cff5f4af5e29ee3912"
-};
-
-// ============================================================
 //  متغیرها
 // ============================================================
 let currentPhotoLink = "";
@@ -337,7 +337,7 @@ let records = {};
 function showToast(msg, type='success'){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast '+type; t.style.display='block';
-  setTimeout(()=>{ t.style.display='none'; },3000);
+  setTimeout(()=>{ t.style.display='none'; },4000);
 }
 
 function showLoading(show){
@@ -345,47 +345,61 @@ function showLoading(show){
 }
 
 // ============================================================
-//  بارگذاری از JSONBin
+//  بارگذاری از localStorage
 // ============================================================
-async function loadRecords() {
+function loadRecords() {
   try {
-    showLoading(true);
-    const response = await fetch(JSONBIN_CONFIG.url, {
-      headers: { 'X-Master-Key': JSONBIN_CONFIG.apiKey }
-    });
-    if (!response.ok) throw new Error('خطا در دریافت اطلاعات');
-    const result = await response.json();
-    records = result.record || {};
+    const data = localStorage.getItem('amayeshRecords');
+    if (data) {
+      records = JSON.parse(data);
+    } else {
+      // دیتابیس پیش‌فرض
+      records = {
+        "2241234": {
+          name: "علی محمدی",
+          father: "رضا محمدی",
+          id: "2241234",
+          issueDate: "۱۴۰۲/۰۵/۱۰",
+          expiryDate: "۱۴۰۴/۰۵/۱۰",
+          residence: "تهران، خیابان آزادی",
+          photo: ""
+        },
+        "7654321": {
+          name: "زهرا کریمی",
+          father: "حسین کریمی",
+          id: "7654321",
+          issueDate: "۱۴۰۱/۰۸/۲۲",
+          expiryDate: "۱۴۰۳/۰۸/۲۲",
+          residence: "اصفهان، خیابان امام",
+          photo: ""
+        },
+        "9876543": {
+          name: "سعید رضایی",
+          father: "محمد رضایی",
+          id: "9876543",
+          issueDate: "۱۴۰۳/۰۱/۱۵",
+          expiryDate: "۱۴۰۵/۰۱/۱۵",
+          residence: "شیراز، بلوار حافظ",
+          photo: ""
+        }
+      };
+      saveToStorage();
+    }
     renderTable();
-    showLoading(false);
-  } catch (error) {
-    showLoading(false);
-    showToast('خطا در بارگذاری اطلاعات: ' + error.message, 'error');
-    records = {};
-    renderTable();
+  } catch(e) {
+    showToast('خطا در بارگذاری اطلاعات', 'error');
   }
 }
 
 // ============================================================
-//  ذخیره در JSONBin
+//  ذخیره در localStorage
 // ============================================================
-async function saveRecords() {
+function saveToStorage() {
   try {
-    showLoading(true);
-    const response = await fetch(JSONBIN_CONFIG.url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_CONFIG.apiKey
-      },
-      body: JSON.stringify(records)
-    });
-    if (!response.ok) throw new Error('خطا در ذخیره اطلاعات');
-    showLoading(false);
+    localStorage.setItem('amayeshRecords', JSON.stringify(records));
     return true;
-  } catch (error) {
-    showLoading(false);
-    showToast('خطا در ذخیره: ' + error.message, 'error');
+  } catch(e) {
+    showToast('خطا در ذخیره اطلاعات', 'error');
     return false;
   }
 }
@@ -462,9 +476,51 @@ function removePhoto(){
 }
 
 // ============================================================
+//  پشتیبان‌گیری
+// ============================================================
+function backupData() {
+  const data = JSON.stringify(records, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `amayesh-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ پشتیبان با موفقیت دانلود شد', 'success');
+}
+
+// ============================================================
+//  بازیابی
+// ============================================================
+function restoreData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (Object.keys(data).length === 0) {
+        showToast('فایل پشتیبان معتبر نیست', 'error');
+        return;
+      }
+      records = data;
+      saveToStorage();
+      renderTable();
+      showToast('✅ اطلاعات با موفقیت بازیابی شد', 'success');
+    } catch(err) {
+      showToast('خطا در خواندن فایل پشتیبان', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ============================================================
 //  افزودن
 // ============================================================
-document.getElementById('addBtn').addEventListener('click', async function(){
+document.getElementById('addBtn').addEventListener('click', function(){
   const name=document.getElementById('fName').value.trim();
   const father=document.getElementById('fFather').value.trim();
   const issue=document.getElementById('fIssue').value.trim();
@@ -482,8 +538,7 @@ document.getElementById('addBtn').addEventListener('click', async function(){
 
   records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
 
-  const saved = await saveRecords();
-  if(saved){
+  if(saveToStorage()){
     renderTable();
     const genDiv=document.getElementById('generatedCode');
     genDiv.textContent='✅ شناسه یکتا: '+id;
@@ -503,11 +558,10 @@ document.getElementById('addBtn').addEventListener('click', async function(){
 // ============================================================
 //  حذف
 // ============================================================
-window.deleteRecord=async function(id){
+window.deleteRecord=function(id){
   if(!confirm(`آیا از حذف کارت با شناسه ${id} مطمئن هستید؟`)) return;
   delete records[id];
-  const saved = await saveRecords();
-  if(saved){ renderTable(); showToast('کارت با موفقیت حذف شد','success'); }
+  if(saveToStorage()){ renderTable(); showToast('کارت با موفقیت حذف شد','success'); }
 };
 
 // ============================================================
@@ -531,7 +585,7 @@ window.closeEdit=function(){
   editingId=null;
 };
 
-window.saveEdit=async function(){
+window.saveEdit=function(){
   if(!editingId) return;
   const name=document.getElementById('eName').value.trim();
   const father=document.getElementById('eFather').value.trim();
@@ -548,8 +602,7 @@ window.saveEdit=async function(){
 
   records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
   
-  const saved = await saveRecords();
-  if(saved){
+  if(saveToStorage()){
     renderTable();
     closeEdit();
     showToast('اطلاعات با موفقیت ویرایش شد','success');
