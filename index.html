@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* ===== تمام استایل‌های قبلی ===== */
   :root{
     --navy: #16323F;
     --navy-deep: #0E2530;
@@ -484,78 +485,48 @@
 
 <script>
 // ============================================================
-//  تنظیمات JSONBin
+//  📚 دیتابیس اصلی (اینجا همه اطلاعات رو مینویسی)
 // ============================================================
-const JSONBIN_CONFIG = {
-  binId: "6a7329cff5f4af5e29ee3912",
-  apiKey: "$2a$10$gQdsRL7LXLsoESY./AanBOYShpyTL9E3HSUnhYSWCYYwR6U3d11qq",
-  url: "https://api.jsonbin.io/v3/b/6a7329cff5f4af5e29ee3912"
+const database = {
+  // شناسه‌های نمونه
+  "2241234": {
+    name: "علی محمدی",
+    father: "رضا محمدی",
+    id: "2241234",
+    issueDate: "۱۴۰۲/۰۵/۱۰",
+    expiryDate: "۱۴۰۴/۰۵/۱۰",
+    residence: "تهران، خیابان آزادی",
+    photo: ""
+  },
+  "7654321": {
+    name: "زهرا کریمی",
+    father: "حسین کریمی",
+    id: "7654321",
+    issueDate: "۱۴۰۱/۰۸/۲۲",
+    expiryDate: "۱۴۰۳/۰۸/۲۲",
+    residence: "اصفهان، خیابان امام",
+    photo: ""
+  },
+  "9876543": {
+    name: "سعید رضایی",
+    father: "محمد رضایی",
+    id: "9876543",
+    issueDate: "۱۴۰۳/۰۱/۱۵",
+    expiryDate: "۱۴۰۵/۰۱/۱۵",
+    residence: "شیراز، بلوار حافظ",
+    photo: ""
+  },
+  // 👇 اطلاعات جدید رو اینجا اضافه کن
+  // "1234567": {
+  //   name: "نام جدید",
+  //   father: "نام پدر",
+  //   id: "1234567",
+  //   issueDate: "۱۴۰۴/۰۱/۰۱",
+  //   expiryDate: "۱۴۰۵/۰۱/۰۱",
+  //   residence: "تهران، خیابان ...",
+  //   photo: "https://...jpg"
+  // }
 };
-
-// ============================================================
-//  دیتابیس کش (برای کاهش درخواست)
-// ============================================================
-let cachedDatabase = {};
-
-// ============================================================
-//  تابع بارگذاری دیتابیس از JSONBin
-// ============================================================
-async function loadDatabase() {
-  try {
-    const response = await fetch(JSONBIN_CONFIG.url, {
-      headers: {
-        'X-Master-Key': JSONBIN_CONFIG.apiKey
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('خطا در دریافت اطلاعات از سرور');
-    }
-    
-    const result = await response.json();
-    cachedDatabase = result.record || {};
-    return cachedDatabase;
-  } catch (error) {
-    console.warn('خطا در بارگذاری از JSONBin:', error);
-    // اگر خطا بود، از دیتابیس محلی استفاده کن
-    return getDefaultDatabase();
-  }
-}
-
-// ============================================================
-//  دیتابیس پیش‌فرض
-// ============================================================
-function getDefaultDatabase() {
-  return {
-    "2241234": {
-      name: "علی محمدی",
-      father: "رضا محمدی",
-      id: "2241234",
-      issueDate: "۱۴۰۲/۰۵/۱۰",
-      expiryDate: "۱۴۰۴/۰۵/۱۰",
-      residence: "تهران، خیابان آزادی",
-      photo: ""
-    },
-    "7654321": {
-      name: "زهرا کریمی",
-      father: "حسین کریمی",
-      id: "7654321",
-      issueDate: "۱۴۰۱/۰۸/۲۲",
-      expiryDate: "۱۴۰۳/۰۸/۲۲",
-      residence: "اصفهان، خیابان امام",
-      photo: ""
-    },
-    "9876543": {
-      name: "سعید رضایی",
-      father: "محمد رضایی",
-      id: "9876543",
-      issueDate: "۱۴۰۳/۰۱/۱۵",
-      expiryDate: "۱۴۰۵/۰۱/۱۵",
-      residence: "شیراز، بلوار حافظ",
-      photo: ""
-    }
-  };
-}
 
 // ============================================================
 //  تابع تبدیل اعداد فارسی به انگلیسی
@@ -573,7 +544,7 @@ function convertToEnglishNumber(input) {
 // ============================================================
 //  تابع استعلام
 // ============================================================
-async function handleInquiry() {
+function handleInquiry() {
   const input = document.getElementById('amayeshId');
   const rawId = input.value.trim();
   const resultCard = document.getElementById('resultCard');
@@ -595,9 +566,6 @@ async function handleInquiry() {
 
   loadingStatus.style.display = 'block';
   resultCard.style.display = 'none';
-
-  // بارگذاری دیتابیس از JSONBin
-  const database = await loadDatabase();
 
   setTimeout(() => {
     loadingStatus.style.display = 'none';
@@ -652,4 +620,7 @@ document.getElementById('amayeshId').addEventListener('keydown', function(e) {
 //  بارگذاری اولیه
 // ============================================================
 console.log('🚀 سامانه استعلام کارت آمایش');
-console.log('
+console.log('📚 تعداد رکوردها:', Object.keys(database).length);
+</script>
+</body>
+</html>
