@@ -484,29 +484,57 @@
 
 <script>
 // ============================================================
-//  بارگذاری دیتابیس از localStorage
+//  تنظیمات JSONBin
 // ============================================================
-function loadDatabase() {
-  try {
-    const data = localStorage.getItem('amayeshRecords');
-    if (data) {
-      const parsed = JSON.parse(data);
-      if (Object.keys(parsed).length > 0) {
-        return parsed;
-      }
-    }
-  } catch(e) { console.warn('خطا در بارگذاری localStorage:', e); }
+const JSONBIN_CONFIG = {
+  binId: "6a7329cff5f4af5e29ee3912",
+  apiKey: "$2a$10$gQdsRL7LXLsoESY./AanBOYShpyTL9E3HSUnhYSWCYYwR6U3d11qq",
+  url: "https://api.jsonbin.io/v3/b/6a7329cff5f4af5e29ee3912"
+};
 
-  // دیتابیس پیش‌فرض (اگه localStorage خالی بود)
-  const defaultData = {
+// ============================================================
+//  دیتابیس کش (برای کاهش درخواست)
+// ============================================================
+let cachedDatabase = {};
+
+// ============================================================
+//  تابع بارگذاری دیتابیس از JSONBin
+// ============================================================
+async function loadDatabase() {
+  try {
+    const response = await fetch(JSONBIN_CONFIG.url, {
+      headers: {
+        'X-Master-Key': JSONBIN_CONFIG.apiKey
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('خطا در دریافت اطلاعات از سرور');
+    }
+    
+    const result = await response.json();
+    cachedDatabase = result.record || {};
+    return cachedDatabase;
+  } catch (error) {
+    console.warn('خطا در بارگذاری از JSONBin:', error);
+    // اگر خطا بود، از دیتابیس محلی استفاده کن
+    return getDefaultDatabase();
+  }
+}
+
+// ============================================================
+//  دیتابیس پیش‌فرض
+// ============================================================
+function getDefaultDatabase() {
+  return {
     "2241234": {
-      name: "زرولی نواب زاده",
-      father: "حاجی نواب",
+      name: "علی محمدی",
+      father: "رضا محمدی",
       id: "2241234",
-      issueDate: "۱۴۰۵/۰۵/۱۴",
-      expiryDate: "۱۴۰۶/۰۵/۱۴",
-      residence: "تهران ",
-      photo: "https://cdn.imgurl.ir/uploads/z977577_IMG-20260802-WA0043.jpg"
+      issueDate: "۱۴۰۲/۰۵/۱۰",
+      expiryDate: "۱۴۰۴/۰۵/۱۰",
+      residence: "تهران، خیابان آزادی",
+      photo: ""
     },
     "7654321": {
       name: "زهرا کریمی",
@@ -517,26 +545,17 @@ function loadDatabase() {
       residence: "اصفهان، خیابان امام",
       photo: ""
     },
-    "8503239": {
-      name: "زرولی نواب زاده",
-      father: "حاجی نواب",
-      id: "8503239",
-      issueDate: "۱۴۰۵/۰۵/۱۴",
-      expiryDate: "۱۴۰۶/۰۵/۱۴",
-      residence: "تهران تهران",
-      photo: "https://cdn.imgurl.ir/uploads/z977577_IMG-20260802-WA0043.jpg"
+    "9876543": {
+      name: "سعید رضایی",
+      father: "محمد رضایی",
+      id: "9876543",
+      issueDate: "۱۴۰۳/۰۱/۱۵",
+      expiryDate: "۱۴۰۵/۰۱/۱۵",
+      residence: "شیراز، بلوار حافظ",
+      photo: ""
     }
   };
-
-  // ذخیره دیتابیس پیش‌فرض در localStorage
-  try {
-    localStorage.setItem('amayeshRecords', JSON.stringify(defaultData));
-  } catch(e) {}
-  return defaultData;
 }
-
-// بارگذاری دیتابیس
-let database = loadDatabase();
 
 // ============================================================
 //  تابع تبدیل اعداد فارسی به انگلیسی
@@ -554,13 +573,12 @@ function convertToEnglishNumber(input) {
 // ============================================================
 //  تابع استعلام
 // ============================================================
-function handleInquiry() {
+async function handleInquiry() {
   const input = document.getElementById('amayeshId');
   const rawId = input.value.trim();
   const resultCard = document.getElementById('resultCard');
   const loadingStatus = document.getElementById('loadingStatus');
 
-  // تبدیل اعداد فارسی به انگلیسی
   const id = convertToEnglishNumber(rawId);
 
   resultCard.style.display = 'none';
@@ -578,19 +596,11 @@ function handleInquiry() {
   loadingStatus.style.display = 'block';
   resultCard.style.display = 'none';
 
+  // بارگذاری دیتابیس از JSONBin
+  const database = await loadDatabase();
+
   setTimeout(() => {
     loadingStatus.style.display = 'none';
-
-    // بارگذاری مجدد دیتابیس از localStorage (برای اطلاعات جدید)
-    try {
-      const freshData = localStorage.getItem('amayeshRecords');
-      if (freshData) {
-        const parsed = JSON.parse(freshData);
-        if (Object.keys(parsed).length > 0) {
-          database = parsed;
-        }
-      }
-    } catch(e) {}
 
     const data = database[id];
 
@@ -620,7 +630,7 @@ function handleInquiry() {
     resultCard.style.display = 'block';
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  }, 2000);
+  }, 1500);
 }
 
 // ============================================================
@@ -638,10 +648,8 @@ document.getElementById('amayeshId').addEventListener('keydown', function(e) {
   }
 });
 
+// ============================================================
+//  بارگذاری اولیه
+// ============================================================
 console.log('🚀 سامانه استعلام کارت آمایش');
-console.log('📡 متصل به localStorage با کلید: amayeshRecords');
-console.log('📚 تعداد رکوردها:', Object.keys(database).length);
-</script>
-
-</body>
-</html>
+console.log('
