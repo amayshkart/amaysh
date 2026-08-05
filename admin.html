@@ -33,7 +33,6 @@
   .mono{ font-family:'IBM Plex Mono', monospace; direction:ltr; }
   .container{ max-width:1100px; margin:0 auto; }
 
-  /* ===== لاگین ===== */
   .login-box{
     max-width:400px; margin:80px auto;
     background:#fff; padding:32px;
@@ -59,7 +58,6 @@
   .login-box .btn:hover{ background:var(--navy); }
   .login-error{ color:var(--danger); text-align:center; margin-top:12px; font-weight:600; display:none; }
 
-  /* ===== پنل ===== */
   .panel{ display:none; }
   .header{
     background:var(--navy-deep); color:#fff; padding:16px 24px;
@@ -109,7 +107,6 @@
   }
   .form-grid textarea{ resize:vertical; min-height:50px; }
 
-  /* ===== لینک عکس ===== */
   .photo-section{
     display:flex; align-items:center; gap:20px; flex-wrap:wrap;
     padding:12px 16px; background:#f8f9fc; border-radius:8px; border:1px solid var(--line);
@@ -175,7 +172,6 @@
     font-size:20px; font-weight:900; color:var(--navy-deep); letter-spacing:2px; display:none;
   }
 
-  /* ===== مودال ویرایش ===== */
   .modal-overlay{
     position:fixed; top:0; left:0; right:0; bottom:0;
     background:rgba(0,0,0,0.5); z-index:1000; display:none;
@@ -197,6 +193,22 @@
   .modal-actions .btn-cancel{ padding:10px 28px; background:#d1d5db; color:#1a1a2e; border:none; border-radius:var(--radius); font-weight:700; font-size:14px; cursor:pointer; }
   .modal-actions .btn-cancel:hover{ background:#b0b5bb; }
 
+  .loading-overlay{
+    display:none;
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.4);
+    z-index:1001;
+    align-items:center;
+    justify-content:center;
+  }
+  .loading-spinner{
+    background:#fff; padding:30px 40px;
+    border-radius:var(--radius);
+    font-size:18px; font-weight:700;
+    color:var(--navy-deep);
+    box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  }
+
   @media(max-width:640px){
     .form-grid{ grid-template-columns:1fr; }
     .header{ flex-direction:column; text-align:center; }
@@ -208,6 +220,11 @@
 </style>
 </head>
 <body>
+
+<!-- ===== لودینگ ===== -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spinner">⏳ در حال ذخیره‌سازی...</div>
+</div>
 
 <!-- ===== توست ===== -->
 <div id="toast" class="toast"></div>
@@ -254,12 +271,10 @@
     </div>
   </div>
 
-  <!-- آمار -->
   <div class="stats">
     <div class="stat-box"><div class="number" id="totalCount">0</div><div class="label">تعداد کل</div></div>
   </div>
 
-  <!-- ===== فرم افزودن ===== -->
   <div class="card">
     <h3>افزودن کارت آمایش جدید</h3>
     <div class="form-grid">
@@ -268,8 +283,6 @@
       <div><label>تاریخ صدور *</label><input id="fIssue" placeholder="۱۴۰۲/۰۵/۱۰" /></div>
       <div><label>تاریخ انقضا *</label><input id="fExpiry" placeholder="۱۴۰۴/۰۵/۱۰" /></div>
       <div class="full"><label>محل اقامت *</label><input id="fResidence" placeholder="تهران، خیابان آزادی" /></div>
-
-      <!-- ===== لینک عکس ===== -->
       <div class="full">
         <label>لینک عکس (اختیاری)</label>
         <div class="photo-section">
@@ -290,7 +303,6 @@
     <div id="generatedCode" class="generated-code"></div>
   </div>
 
-  <!-- ===== لیست ===== -->
   <div class="card">
     <h3>لیست کارت‌های آمایش</h3>
     <div class="table-wrap">
@@ -304,36 +316,12 @@
 
 <script>
 // ============================================================
-//  دیتابیس (هم‌ساختار با سامانه اصلی)
+//  تنظیمات JSONBin
 // ============================================================
-let records = {
-  "224123456789": {
-    name: "علی محمدی",
-    father: "رضا محمدی",
-    id: "224123456789",
-    issueDate: "۱۴۰۲/۰۵/۱۰",
-    expiryDate: "۱۴۰۴/۰۵/۱۰",
-    residence: "تهران، خیابان آزادی",
-    photo: ""
-  },
-  "224765432187": {
-    name: "زهرا کریمی",
-    father: "حسین کریمی",
-    id: "224765432187",
-    issueDate: "۱۴۰۱/۰۸/۲۲",
-    expiryDate: "۱۴۰۳/۰۸/۲۲",
-    residence: "اصفهان، خیابان امام",
-    photo: ""
-  },
-  "224987654321": {
-    name: "سعید رضایی",
-    father: "محمد رضایی",
-    id: "224987654321",
-    issueDate: "۱۴۰۳/۰۱/۱۵",
-    expiryDate: "۱۴۰۵/۰۱/۱۵",
-    residence: "شیراز، بلوار حافظ",
-    photo: ""
-  }
+const JSONBIN_CONFIG = {
+  binId: "6a7329cff5f4af5e29ee3912",
+  apiKey: "$2a$10$gQdsRL7LXLsoESY./AanBOYShpyTL9E3HSUnhYSWCYYwR6U3d11qq",
+  url: "https://api.jsonbin.io/v3/b/6a7329cff5f4af5e29ee3912"
 };
 
 // ============================================================
@@ -341,9 +329,105 @@ let records = {
 // ============================================================
 let currentPhotoLink = "";
 let editingId = null;
+let records = {};
 
 // ============================================================
-//  توابع
+//  توابع نمایش
+// ============================================================
+function showToast(msg, type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type; t.style.display='block';
+  setTimeout(()=>{ t.style.display='none'; },3000);
+}
+
+function showLoading(show){
+  document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+}
+
+// ============================================================
+//  بارگذاری از JSONBin
+// ============================================================
+async function loadRecords() {
+  try {
+    showLoading(true);
+    const response = await fetch(JSONBIN_CONFIG.url, {
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.apiKey }
+    });
+    if (!response.ok) throw new Error('خطا در دریافت اطلاعات');
+    const result = await response.json();
+    records = result.record || {};
+    renderTable();
+    showLoading(false);
+  } catch (error) {
+    showLoading(false);
+    showToast('خطا در بارگذاری اطلاعات: ' + error.message, 'error');
+    records = {};
+    renderTable();
+  }
+}
+
+// ============================================================
+//  ذخیره در JSONBin
+// ============================================================
+async function saveRecords() {
+  try {
+    showLoading(true);
+    const response = await fetch(JSONBIN_CONFIG.url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_CONFIG.apiKey
+      },
+      body: JSON.stringify(records)
+    });
+    if (!response.ok) throw new Error('خطا در ذخیره اطلاعات');
+    showLoading(false);
+    return true;
+  } catch (error) {
+    showLoading(false);
+    showToast('خطا در ذخیره: ' + error.message, 'error');
+    return false;
+  }
+}
+
+// ============================================================
+//  رندر جدول
+// ============================================================
+function renderTable(){
+  const tbody=document.getElementById('recordsTable');
+  const keys=Object.keys(records);
+  document.getElementById('totalCount').textContent=keys.length;
+  
+  if(!keys.length){
+    tbody.innerHTML='<tr><td colspan="6" style="padding:20px;color:#6b7280;">هیچ کارتی ثبت نشده است</td></tr>';
+    return;
+  }
+  
+  let html='';
+  keys.forEach(id=>{
+    const r=records[id];
+    const photoHtml = r.photo ? 
+      `<img src="${r.photo}" class="record-photo" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:18px;\\'>👤</span>';" />` : 
+      `<span class="record-photo-placeholder">👤</span>`;
+    html+=`
+      <tr>
+        <td>${photoHtml}</td>
+        <td><strong>${id}</strong></td>
+        <td>${r.name||''}</td>
+        <td>${r.father||''}</td>
+        <td>${r.expiryDate||''}</td>
+        <td>
+          <button class="btn-edit" onclick="openEdit('${id}')">ویرایش</button>
+          <button class="btn-danger" onclick="deleteRecord('${id}')">حذف</button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML=html;
+}
+
+// ============================================================
+//  تولید شناسه ۷ رقمی
 // ============================================================
 function generateId() {
   let code;
@@ -353,41 +437,6 @@ function generateId() {
     attempts++;
   } while (records[code] && attempts < 100);
   return code;
-}
-
-function showToast(msg, type='success'){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast '+type; t.style.display='block';
-  setTimeout(()=>{ t.style.display='none'; },3000);
-}
-
-function renderTable(){
-  const tbody=document.getElementById('recordsTable');
-  const keys=Object.keys(records);
-  if(!keys.length){
-    tbody.innerHTML='<tr><td colspan="6" style="padding:20px;color:#6b7280;">هیچ کارتی ثبت نشده است</td></tr>';
-    return;
-  }
-  let html='';
-  keys.forEach(id=>{
-    const r=records[id];
-    const photoHtml = r.photo ? `<img src="${r.photo}" class="record-photo" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:18px;\\'>👤</span>';" />` : `<span class="record-photo-placeholder">👤</span>`;
-    html+=`
-      <tr>
-        <td>${photoHtml}</td>
-        <td><strong>${id}</strong></td>
-        <td>${r.name}</td>
-        <td>${r.father}</td>
-        <td>${r.expiryDate}</td>
-        <td>
-          <button class="btn-edit" onclick="openEdit('${id}')">ویرایش</button>
-          <button class="btn-danger" onclick="deleteRecord('${id}')">حذف</button>
-        </td>
-      </tr>
-    `;
-  });
-  tbody.innerHTML=html;
-  document.getElementById('totalCount').textContent=keys.length;
 }
 
 // ============================================================
@@ -413,14 +462,52 @@ function removePhoto(){
 }
 
 // ============================================================
+//  افزودن
+// ============================================================
+document.getElementById('addBtn').addEventListener('click', async function(){
+  const name=document.getElementById('fName').value.trim();
+  const father=document.getElementById('fFather').value.trim();
+  const issue=document.getElementById('fIssue').value.trim();
+  const expiry=document.getElementById('fExpiry').value.trim();
+  const residence=document.getElementById('fResidence').value.trim();
+  const photo=currentPhotoLink;
+
+  if(!name||!father||!issue||!expiry||!residence){
+    showToast('لطفاً تمام فیلدهای الزامی را پر کنید','error');
+    return;
+  }
+
+  const id=generateId();
+  if(!id){ showToast('خطا در تولید شناسه','error'); return; }
+
+  records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
+
+  const saved = await saveRecords();
+  if(saved){
+    renderTable();
+    const genDiv=document.getElementById('generatedCode');
+    genDiv.textContent='✅ شناسه یکتا: '+id;
+    genDiv.style.display='block';
+    setTimeout(()=>{ genDiv.style.display='none'; },8000);
+    
+    document.getElementById('fName').value='';
+    document.getElementById('fFather').value='';
+    document.getElementById('fIssue').value='';
+    document.getElementById('fExpiry').value='';
+    document.getElementById('fResidence').value='';
+    removePhoto();
+    showToast(`کارت با شناسه ${id} با موفقیت افزوده شد`,'success');
+  }
+});
+
+// ============================================================
 //  حذف
 // ============================================================
-window.deleteRecord=function(id){
+window.deleteRecord=async function(id){
   if(!confirm(`آیا از حذف کارت با شناسه ${id} مطمئن هستید؟`)) return;
   delete records[id];
-  saveToStorage();
-  renderTable();
-  showToast('کارت با موفقیت حذف شد','success');
+  const saved = await saveRecords();
+  if(saved){ renderTable(); showToast('کارت با موفقیت حذف شد','success'); }
 };
 
 // ============================================================
@@ -444,7 +531,7 @@ window.closeEdit=function(){
   editingId=null;
 };
 
-window.saveEdit=function(){
+window.saveEdit=async function(){
   if(!editingId) return;
   const name=document.getElementById('eName').value.trim();
   const father=document.getElementById('eFather').value.trim();
@@ -460,30 +547,18 @@ window.saveEdit=function(){
   }
 
   records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
-  saveToStorage();
-  renderTable();
-  closeEdit();
-  showToast('اطلاعات با موفقیت ویرایش شد','success');
+  
+  const saved = await saveRecords();
+  if(saved){
+    renderTable();
+    closeEdit();
+    showToast('اطلاعات با موفقیت ویرایش شد','success');
+  }
 };
 
-// کلیک خارج از مودال
 document.getElementById('editModal').addEventListener('click',function(e){
   if(e.target===this) closeEdit();
 });
-
-// ============================================================
-//  ذخیره و بازیابی
-// ============================================================
-function saveToStorage(){
-  try{ localStorage.setItem('amayeshRecords', JSON.stringify(records)); }catch(e){}
-}
-
-function loadFromStorage(){
-  try{
-    const data=localStorage.getItem('amayeshRecords');
-    if(data){ const parsed=JSON.parse(data); if(Object.keys(parsed).length>0) records=parsed; }
-  }catch(e){}
-}
 
 // ============================================================
 //  لاگین
@@ -501,8 +576,7 @@ function doLogin(){
     loginBox.style.display='none';
     panel.style.display='block';
     loginError.style.display='none';
-    loadFromStorage();
-    renderTable();
+    loadRecords();
     showToast('به پنل مدیریت خوش آمدید','success');
   }else{
     loginError.style.display='block';
@@ -522,50 +596,6 @@ logoutBtn.addEventListener('click',function(){
     loginError.style.display='none';
   }
 });
-
-// ============================================================
-//  افزودن
-// ============================================================
-document.getElementById('addBtn').addEventListener('click',function(){
-  const name=document.getElementById('fName').value.trim();
-  const father=document.getElementById('fFather').value.trim();
-  const issue=document.getElementById('fIssue').value.trim();
-  const expiry=document.getElementById('fExpiry').value.trim();
-  const residence=document.getElementById('fResidence').value.trim();
-  const photo=currentPhotoLink;
-
-  if(!name||!father||!issue||!expiry||!residence){
-    showToast('لطفاً تمام فیلدهای الزامی را پر کنید','error');
-    return;
-  }
-
-  const id=generateId();
-  if(!id){ showToast('خطا در تولید شناسه','error'); return; }
-
-  records[id]={name,father,id,issueDate:issue,expiryDate:expiry,residence,photo:photo||''};
-
-  const genDiv=document.getElementById('generatedCode');
-  genDiv.textContent='✅ شناسه یکتا: '+id;
-  genDiv.style.display='block';
-
-  document.getElementById('fName').value='';
-  document.getElementById('fFather').value='';
-  document.getElementById('fIssue').value='';
-  document.getElementById('fExpiry').value='';
-  document.getElementById('fResidence').value='';
-  removePhoto();
-
-  saveToStorage();
-  renderTable();
-  showToast(`کارت با شناسه ${id} با موفقیت افزوده شد`,'success');
-  setTimeout(()=>{ genDiv.style.display='none'; },8000);
-});
-
-// ============================================================
-//  بارگذاری
-// ============================================================
-loadFromStorage();
-renderTable();
 </script>
 </body>
 </html>
